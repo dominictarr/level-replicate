@@ -1,0 +1,25 @@
+{
+  "name": "level-master",
+  "description": "",
+  "version": "0.0.0",
+  "homepage": "https://github.com/dominictarr/level-master",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/dominictarr/level-master.git"
+  },
+  "dependencies": {
+    "monotonic-timestamp": "0.0.8",
+    "stream-to-pull-stream": "~1.0.0",
+    "pull-stream": "~2.5.0"
+  },
+  "devDependencies": {
+    "level-sublevel": "~4.0.2",
+    "tape": "~0.3.2",
+    "levelup": "~0.6.2"
+  },
+  "scripts": {
+    "test": "set -e; for t in test/*.js; do node $t; done"
+  },
+  "author": "Dominic Tarr <dominic.tarr@gmail.com> (http://dominictarr.com)",
+  "license": "MIT"
+}
