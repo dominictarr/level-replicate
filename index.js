@@ -18,58 +18,23 @@ var module.exports = function (db, meta) {
   //cleanup old records.
   //run this every so often if you have lots of overwrites.
 
-  //handle a number of elements as a batch.
+  //go through the logs in reverse,
+  //get any values that have been over written,
+  //group into batches, so it's more efficient communication with db,
+  //and delete each set.
 
   db.cleanup = function (cb) {
-    var seen = {}
-    var delete = []
-    var deleting = false
-    var ended    = false
-    var delEnded = false
-    var n = 0
-
-    function drainDeletes (ts) {
-      if(ts) {
-        delete.push({key: ts, type: 'del'})
-        n ++
-      }
-      if(deleting) return
-      deleting = true
-
-      process.nextTick(function () {
-        var _delete = delete
-        delete = []
-        meta.batch(_delete, function () {
-          deleting = false
-          n -= _delete.length
-
-          if(delete.length)
-            drainDeletes()
-          else if(ended && !n)
-            cb && cb()
-          
-        })
-      })
-    }
-
-    meta.createReadStream({reverse: true})
-    .on('data', function (data) {
-      var key = data.value.toString()
-      var ts  = data.key.toString()
-      if(seen[key])
-        drainDeletes(ts)
-    })
-    .on('end', function () {
-      ended = true
-      if(!n) cb && cb()
-    })
-
+    toPull(meta.createReadStream({reverse: true}))
+      .pipe(pull.nonUnique(function (d) { return d.value.toString() })
+      .pipe(pull.map(function () {
+        return {key: d.key, type: 'del'}
+      }))
+      .pipe(pull.group(10))
+      .pipe(pull.asyncMap(meta.batch.bind(meta)))
+      .pipe(pull.drain(cb))
   })
 
-  db.createStream = function (opts) {
-    
 
-  }
 
   
 }
