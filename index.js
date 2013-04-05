@@ -49,17 +49,13 @@ exports = module.exports = function (db, master) {
         })
       }, defer)
 
-    cs.on('close', function () {
-      console.log('CLOSE')
-    })
-
-    return serialize(cs)//.on('data', console.log)
+    return serialize(cs)
   }
 
   master.createPullStream = function (opts, onAbort) {
     opts = opts || {}
     var since = opts.since || 0
-    opts.min = since
+    opts.min = String(since)
     
     //read a header, and then send the data...
     return pl.read(master, opts)
@@ -143,7 +139,6 @@ exports.slave = exports.Slave = function (db, slave) {
       }))
       .pipe(pull.asyncMap(function (batch, cb) {
         db.batch(batch, function (err) {
-//          console.log('saved', batch)
           cb(err, batch)
         })
       }))
