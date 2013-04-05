@@ -25,20 +25,18 @@ slave.post(console.log.bind(console, '>'))
 require('tape')('live replicate', function (t) {
 
 master.createPullStream({tail: true})
-.pipe(pull.through(console.log))
-.pipe(pull.drain())
-//.pipe(slave.createPullStream())
+.pipe(slave.createPullStream())
 
 var i = 5
 var int = setInterval(function () {
   if(!--i) {
     clearInterval(int)
 
-    return
     setTimeout(function () {
 
-      zip(pl.read(db), pl.read(_db))
+      zip([pl.read(db), pl.read(_db)])
       .pipe(pull.through(function (data) {
+        console.log(data)
         t.deepEqual(data[0], data[1])
       }))
       .pipe(pull.onEnd(function () {
@@ -55,12 +53,14 @@ var int = setInterval(function () {
 
     return
   }
+
   var key = Math.random().toString()
   var val = new Date().toString()
+
   db.put(key, val,
     function (err) {
-    console.log(':saved', key, '-->', val, Date.now())
   })
+
 }, 200)
 
 })
