@@ -43,7 +43,7 @@ exports = module.exports = function (db, master) {
     var cs = ClassicStream(function (read) {
         read(null, function (err, data) {
           defer.resolve(master.createPullStream({
-            start: String(data.since || 0),
+            min: String(data.since || 0),
             tail: opts.tail
           }))
         })
@@ -54,21 +54,16 @@ exports = module.exports = function (db, master) {
 
   master.createPullStream = function (opts, onAbort) {
     opts = opts || {}
-    var since = opts.since || 0
+    var since = opts.min || opts.since || 0
     opts.min = String(since)
-    
     //read a header, and then send the data...
     return pl.read(master, opts)
       .pipe(pull.filter(function (data) {
-        return (
-          since < data.key
-          && !!data.value
-        ) //filter deletes, this is just cleaning up!
+        //filter deletes, this is just cleaning up!
+        return (since < data.key && !!data.value)
       }))
       .pipe(pull.asyncMap(function (data, cb) {
-  //       console.log('data', data)
          db.get(data.value, function (err, value) {
-//            console.log('<--', data.value, value, Date.now())
             cb(null, {
               key: data.value,
               value: value,
@@ -116,16 +111,21 @@ exports.slave = exports.Slave = function (db, slave) {
     var first = true
     cs.sink(function (end, cb) {
       if(!first) return
-      first = true
+      first = false
       slave.since(function (err, ts) {
+        console.log(ts)
         cb(null, {since: ts})
       })
     })
     return cs
   }
 
-  slave.createPullStream = function (done) {
-  return window(10, 100) //read from remote MASTER
+  slave.createPullStream = function (opts, done) {
+    if('function' === typeof opts) {
+      done = opts; opts = null
+    }
+
+    return window(10, 100) //read from remote MASTER
       .pipe(pull.map(function (batch) {
         var max = 0
         batch.forEach(function (e) {
