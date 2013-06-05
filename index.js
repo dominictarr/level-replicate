@@ -149,8 +149,11 @@ exports = module.exports = function (db, masterDb, id) {
           return pl.read(masterDb, opts)
             //can remove this once level gets exclusive ranges!
             .pipe(pull.filter(function (data) {
-              var c = nClock[data.key]
-              return !c || (c < data.key) && !!data.value
+              var _id = data.key.split('!').shift()
+              var ts = data.key.split('!').pop()
+              var c = nClock[_id]
+              console.log(c, c < ts, _id, ts)
+              return !c || (c < ts) && !!data.value
             }))
         }), comparator),
         opts.tail ? pl.live(masterDb) : pull.empty()
@@ -185,7 +188,6 @@ exports = module.exports = function (db, masterDb, id) {
       if(!read)
         masterDb.clock(function (err, nClock) {
           if(err) return cb(err)
-          console.error('REST?', nClock, opts)
           ;(read = rest(nClock))(abort, cb)
         })
       else
@@ -197,7 +199,6 @@ exports = module.exports = function (db, masterDb, id) {
     pl.read(clockDb)
       .pipe(pull.reduce(function (clock, item) {
         clock[item.key] = item.value
-        console.error('ITEM', clock)
         return clock
       }, {}, cb))
   }
@@ -253,7 +254,6 @@ exports = module.exports = function (db, masterDb, id) {
     }))
     .pipe(pull.asyncMap(function (batch, cb) {
       db.batch(batch, function (err) {
-        console.log('saved', err)
         cb(err, batch)
       })
     }))
