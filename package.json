@@ -17,16 +17,18 @@
     "pull-stream-to-stream": "~1.2.3",
     "stream-serializer": "0.0.3",
     "pull-level": "~1.0",
-    "pull-window": "~1.0"
+    "pull-window": "~1.0",
+    "pull-stream-merge": "~1.0.4"
   },
   "devDependencies": {
-    "level-sublevel": "~4.1.2",
-    "tape": "~0.2.2",
+    "level-sublevel": ">=4.6 <5",
     "levelup": "~0.6.2",
     "random-name": "~0.1.0",
     "rimraf": "~2.1.4",
     "pull-crypto": "~1.0",
-    "pull-zip": "~1.0.1"
+    "pull-zip": "~1.0.1",
+    "tape": "~1.0.2",
+    "level-test": "~1.2.1"
   },
   "scripts": {
     "test": "set -e; for t in test/*.js; do node $t; done"
