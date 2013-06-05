@@ -47,9 +47,23 @@ function cmp (a, b) {
 }
 
 function comparator(a, b) {
-  var _a = a.key.split('!'), _b = b.key.split('!')
-  console.log(cmp(_a[1], _b[1]) || cmp(_a[0], _b[0]))
-  return cmp(_a[1], _b[1]) || cmp(_a[0], _b[0])
+//  var _a = a.key.split('!'), _b = b.key.split('!')
+//  console.log(cmp(_a[1], _b[1]) || cmp(_a[0], _b[0]))
+//  return cmp(_a[1], _b[1]) || cmp(_a[0], _b[0])
+  return cmp(a.ts, b.ts) || cmp(a.id, b.id)
+}
+
+function prep () {
+  return pull.map(function (data) {
+    var key = data.key.split('!')
+    return {
+      key: data.value,
+      value: null,
+      type: null,
+      id: key.shift(),
+      ts: key.pop()
+    }
+  })
 }
 
 exports = module.exports = function (db, masterDb, id) {
@@ -120,7 +134,6 @@ exports = module.exports = function (db, masterDb, id) {
 
     return serialize(cs)
   }
-
   
   masterDb.createMasterStream = pull.Source(function (opts, onAbort) {
     opts = opts || {}
@@ -145,6 +158,7 @@ exports = module.exports = function (db, masterDb, id) {
         }).map(function (opts) {
           return pl.read(masterDb, opts)
             //can remove this once level gets exclusive ranges!
+            .pipe(prep())
             .pipe(pull.filter(function (data) {
               var _id = data.key.split('!').shift()
               var ts = data.key.split('!').pop()
@@ -153,16 +167,13 @@ exports = module.exports = function (db, masterDb, id) {
               return !c || (c < ts) && !!data.value
             }))
         }), comparator),
-        opts.tail ? pl.live(masterDb) : pull.empty()
+        opts.tail ? pl.live(masterDb).pipe(prep()) : pull.empty()
       ])
       .pipe(pull.asyncMap(function (data, cb) {
-         db.get(data.value, function (err, value) {
-            cb(null, {
-              key: data.value,
-              value: value,
-              type: err ? 'del' : 'put',
-              ts: data.key
-            })
+         db.get(data.key, function (err, value) {
+            data.value = value
+            data.type = err ? 'del' : 'put'
+            cb(null, data)
           })
       }))
       .pipe(function (read) {
@@ -225,16 +236,16 @@ exports = module.exports = function (db, masterDb, id) {
     }
 
     return pull.map(function (op) {
-      var parts = op.ts.split('!')
-      var _id = parts.shift()
-      var ts  = parts.shift()
+//      var parts = op.ts.split('!')
+//      var _id = parts.shift()
+//      var ts  = parts.shift()
 
-      if(clock[_id] > ts) return
+      if(clock[op.id] > op.ts) return
 
       return [
         op,
-        {key: op.ts, value: op.key, type: 'put', prefix: masterDb},
-        {key: _id, value: ts, type: 'put', prefix: clockDb}
+        {key: op.id+'!'+op.ts, value: op.key, type: 'put', prefix: masterDb},
+        {key: op.id, value: op.ts, type: 'put', prefix: clockDb}
       ]
 
     }).pipe(pull.filter(Boolean))
