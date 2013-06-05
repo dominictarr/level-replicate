@@ -17,50 +17,54 @@ rmrf.sync(_path)
 var db = SubLevel(levelup(path))
 var _db = SubLevel(levelup(_path))
 
-var master = Master(db, 'master')
-var slave  = Master.Slave(_db, 'slave')
+process.on('uncaughtException', console.error)
+
+var master = Master(db, 'master', 'TEST1')
+var slave  = Master(_db, 'slave', 'TEST2')
 
 slave.post(console.log.bind(console, '>'))
 
 require('tape')('live replicate', function (t) {
 
-master.createPullStream({tail: true})
-.pipe(slave.createPullStream())
+  master.createMasterStream({tail: true})
+  .pipe(pull.through(console.log.bind(null, '>')))
+  .pipe(slave.createSlaveStream())
 
-var i = 5
-var int = setInterval(function () {
-  if(!--i) {
-    clearInterval(int)
+  db.post(console.log)
 
-    setTimeout(function () {
+  var i = 5
+  var int = setInterval(function () {
+    if(!--i) {
+      clearInterval(int)
 
-      zip([pl.read(db), pl.read(_db)])
-      .pipe(pull.through(function (data) {
-        console.log(data)
-        t.deepEqual(data[0], data[1])
-      }))
-      .pipe(pull.onEnd(function () {
+      setTimeout(function () {
 
-        help.hash(db, function (err, hash) {
-          help.hash(_db, function (err, _hash) {
-            t.equal(hash, _hash)
-            t.end()
+        zip([pl.read(db), pl.read(_db)])
+        .pipe(pull.through(function (data) {
+          console.log(data)
+          t.deepEqual(data[0], data[1])
+        }))
+        .pipe(pull.onEnd(function () {
+
+          help.hash(db, function (err, hash) {
+            help.hash(_db, function (err, _hash) {
+              t.equal(hash, _hash)
+              t.end()
+            })
           })
-        })
-      }))
+        }))
 
-    }, 200)
+      }, 200)
 
-    return
-  }
+      return
+    }
 
-  var key = Math.random().toString()
-  var val = new Date().toString()
+    var key = 'rand_'+Math.random().toString()
+    var val = new Date().toString()
 
-  db.put(key, val,
-    function (err) {
-  })
+    db.put(key, val, function (err) {
+    })
 
-}, 200)
+  }, 200)
 
 })

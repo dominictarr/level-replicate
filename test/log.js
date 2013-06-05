@@ -18,12 +18,28 @@ var zip    = require('pull-zip')
 var pl = require('pull-level')
 
 
+var para     = require('continuable-para')
+var series   = require('continuable-series')
+
+var master   = require('../')
+
+function all (db) {
+  return function (cb) {
+    pl.read(db, {min:'', max: '\xff\xff'})
+      .pipe(pull.reduce(function (all, op) {
+        all[op.key] = op.value
+        return all
+      }, {}, cb))
+  }
+}
+
+
 var help   = require('./helper')
 var test   = require('tape')
 
-var master = Master(db, 'master')
+var master = Master(db, 'master', 'TEST1')
 
-slave = Master.Slave(_db)
+slave = Master(_db, 'master', 'TEST2')
 
 test('setup', function (t) {
   help.populate(db, 20, function () {
@@ -31,33 +47,24 @@ test('setup', function (t) {
   })
 })
 
+process.on('uncaughtException', console.error)
+
 test('createPullStream', function (t) {
   //replicate!
 
-  master.createPullStream()
-  .pipe(pull.through(console.log))
-  .pipe(slave.createPullStream(function (err) {
+  master.createMasterStream({clock: {}})
+//  .pipe(pull.through(console.log.bind(null, '>')))
+  .pipe(slave.createSlaveStream(function (err) {
 
     if(err) throw err
-    
-    zip(pl.read(db), pl.read(_db))
-    .pipe(pull.through(function (data) {
-      t.deepEqual(data[0], data[1])
-    }))
-    .pipe(pull.onEnd(function () {
 
-      help.hash(_db, function (err, hash) {
-        if(err) throw err
-        help.hash(db, function (err, _hash) {
-          if(err) throw err
-          t.equal(hash, _hash)
-          t.end()
-        })
-      })
+    console.log('REP')
 
-    }))
-    
-    //t.end()
+    para(all(db), all(db)) (function (err, all) {
+      t.notOk(err)
+      t.deepEqual(all.shift(), all.shift())
+      t.end()
+    })
   }))
 })
 
