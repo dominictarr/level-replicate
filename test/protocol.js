@@ -20,7 +20,7 @@ test('protocol', function (t) {
 
     var n = 2
 
-    masterDb.createPullStream({clock: {TEST: 0}})
+    masterDb.createMasterStream({clock: {TEST: 0}})
       .pipe(pull.collect(function (err, all) {
         t.notOk(err)
         console.log('1')
@@ -31,15 +31,15 @@ test('protocol', function (t) {
       }))
 
     masterDb.clock(function (err, clock) {
-      masterDb.createPullStream({clock: clock})
+      masterDb.createMasterStream({clock: clock})
         .pipe(pull.collect(function (err, all) {
           console.log('2')
+          console.log(all, clock)
           t.notOk(err)
           t.equal(all.length, 0)
           next()
         }))
     })
-
  
     function next () {
       if(--n) return
