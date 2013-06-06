@@ -52,7 +52,7 @@ function comparator(a, b) {
 
 function prep () {
   return pull.map(function (data) {
-    var key = data.key.split('!')
+    var key = data.key.split('\x00')
     return {
       key: data.value,
       value: null,
@@ -78,7 +78,7 @@ exports = module.exports = function (db, masterDb, id) {
       })
     ) {
       var ts = timestamp()
-      add({key: id+'!'+ts, value: op.key, type: 'put', prefix: masterDb})
+      add({key: id+'\x00'+ts, value: op.key, type: 'put', prefix: masterDb})
       add({key: id, value: ''+ts, type: 'put', prefix: clockDb})
     }
   })
@@ -109,7 +109,7 @@ exports = module.exports = function (db, masterDb, id) {
     var cs = ClassicStream(function (read) {
         read(null, function (err, data) {
           defer.resolve(masterDb.createMasterStream({
-            min: String(id+'!'+(data.since || 0)),
+            min: String(id+'\x00'+(data.since || 0)),
             tail: opts.tail
           }))
         })
@@ -123,7 +123,7 @@ exports = module.exports = function (db, masterDb, id) {
     var cs = ClassicStream(function (read) {
         read(null, function (err, data) {
           defer.resolve(masterDb.createMasterStream({
-            min: String(id+'!'+(data.since || 0)),
+            min: String(id+'\x00'+(data.since || 0)),
             tail: opts.tail
           }))
         })
@@ -151,7 +151,7 @@ exports = module.exports = function (db, masterDb, id) {
 
       return cat([
         merge(map(nClock, function (value, key) {
-          return {min: key + '!' + value, max: key+'!~', tail: false}
+          return {min: key + '\x00' + value, max: key+'\x00\xff', tail: false}
         }).map(function (opts) {
           return pl.read(masterDb, opts)
             //can remove this once level gets exclusive ranges!
@@ -227,23 +227,24 @@ exports = module.exports = function (db, masterDb, id) {
       done = opts; opts = null
     }
 
-    return pull.map(function (op) {
-
+    return pull.through(console.log)
+   .pipe(pull.map(function (op) {
       if(clock[op.id] > op.ts) return
 
       return [
         op,
-        {key: op.id+'!'+op.ts, value: op.key, type: 'put', prefix: masterDb},
+        {key: op.id+'\x00'+op.ts, value: op.key, type: 'put', prefix: masterDb},
         {key: op.id, value: op.ts, type: 'put', prefix: clockDb}
       ]
 
-    }).pipe(pull.filter(Boolean))
+    }))
+    .pipe(pull.filter(Boolean))
     .pipe(pull.map(function (batch) {
 
       var seen = {}
       //make sure there is only one clock update per batch
       batch = filterReverse(batch, function (op) {
-        if(op.prefix !== clockDb) return true
+        if(op.prefix !== clockDb)  return true
         else if (!seen[op.key])    return seen[op.key] = true
         return false
       })
@@ -257,7 +258,7 @@ exports = module.exports = function (db, masterDb, id) {
     .pipe(function (read) {
       read(null, function next(end, data) {
         if(end) done()
-        else read(null, next)
+        else    read(null, next)
       })
     })
     //currently not sure why this isn't working...
