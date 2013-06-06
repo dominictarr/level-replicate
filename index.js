@@ -217,6 +217,8 @@ exports = module.exports = function (db, masterDb, id) {
 
   //the writable side of the replication stream.
 
+  var n = 0
+
   masterDb.createSlaveStream = function (opts, done) {
     if('function' === typeof opts) {
       done = opts; opts = null
@@ -236,35 +238,30 @@ exports = module.exports = function (db, masterDb, id) {
       ]
 
     }).pipe(pull.filter(Boolean))
-//    .pipe(function (read) {
-//
-//      return function (a, c) {
-//        read(function (err, data) {
-//          console.error('>>>>', err, data)
-//          c(err, data)
-//
-//        })
-//      }
-//    })
-    .pipe(window(10, 100))
-    .pipe(pull.map(function (_batch) {
-
-      var batch = flatten(_batch)
+    .pipe(pull.map(function (batch) {
 
       var seen = {}
       //make sure there is only one clock update per batch
-      return filterReverse(batch, function (op) {
+      batch = filterReverse(batch, function (op) {
         if(op.prefix !== clockDb) return true
         else if (!seen[op.key])    return seen[op.key] = true
         return false
       })
+      return batch
     }))
     .pipe(pull.asyncMap(function (batch, cb) {
       db.batch(batch, function (err) {
-        cb(err, batch)
+        cb(err, !!batch)
       })
     }))
-    .pipe(pull.drain(null, done))
+    .pipe(function (read) {
+      read(null, function next(end, data) {
+        if(end) done()
+        else read(null, next)
+      })
+    })
+    //currently not sure why this isn't working...
+    //.pipe(pull.drain(null, done))
   }
 
   return masterDb
