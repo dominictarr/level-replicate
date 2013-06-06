@@ -47,9 +47,6 @@ function cmp (a, b) {
 }
 
 function comparator(a, b) {
-//  var _a = a.key.split('!'), _b = b.key.split('!')
-//  console.log(cmp(_a[1], _b[1]) || cmp(_a[0], _b[0]))
-//  return cmp(_a[1], _b[1]) || cmp(_a[0], _b[0])
   return cmp(a.ts, b.ts) || cmp(a.id, b.id)
 }
 
@@ -160,11 +157,8 @@ exports = module.exports = function (db, masterDb, id) {
             //can remove this once level gets exclusive ranges!
             .pipe(prep())
             .pipe(pull.filter(function (data) {
-              var _id = data.key.split('!').shift()
-              var ts = data.key.split('!').pop()
-              var c = nClock[_id]
-              console.log(c, c < ts, _id, ts)
-              return !c || (c < ts) && !!data.value
+              var c = nClock[data.id]
+              return !c || (c < data.ts) && !!data.key
             }))
         }), comparator),
         opts.tail ? pl.live(masterDb).pipe(prep()) : pull.empty()
@@ -228,17 +222,12 @@ exports = module.exports = function (db, masterDb, id) {
 
   //the writable side of the replication stream.
 
-  var n = 0
-
   masterDb.createSlaveStream = function (opts, done) {
     if('function' === typeof opts) {
       done = opts; opts = null
     }
 
     return pull.map(function (op) {
-//      var parts = op.ts.split('!')
-//      var _id = parts.shift()
-//      var ts  = parts.shift()
 
       if(clock[op.id] > op.ts) return
 
