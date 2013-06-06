@@ -62,14 +62,11 @@ exports = module.exports = function (db, masterDb, id) {
   //ADD A LOG THAT POINTS TO WHICH KEYS WHERE UPDATED WHEN.
   
   db.pre(function (op, add, batch) {
-    console.error('PRE', batch)
-    
     if(!find(batch, function (_op) {
         return _op.value === op.key && _op.prefix === masterDb
       })
     ) {
       var ts = timestamp()
-      console.log("INSERT", ts)
       add({key: id+'!'+ts, value: op.key, type: 'put', prefix: masterDb})
       add({key: id, value: ''+ts, type: 'put', prefix: clockDb})
     }
@@ -272,63 +269,3 @@ exports = module.exports = function (db, masterDb, id) {
 
   return masterDb
 }
-
-
-//exports.slave = exports.Slave = function (db, slave) {
-//
-//  slave = slave || 'slave'
-//  if('string' === typeof slave)
-//    slave = db.sublevel(slave)
-//
-//  slave.since = function (cb) {
-//    slave.get('seq', function (err, val) {
-//      cb(null, Number(val) || 0)
-//    })
-//  }
-//
-//  slave.createStream = function () {
-//    var cs = serialize(ClassicStream())
-//    cs.source.pipe(
-//      slave.createPullStream(function (err) {
-//        if(err) cs.emit('error')
-//        else cs.emit('close')
-//    }))
-//    var first = true
-//    cs.sink(function (end, cb) {
-//      if(!first) return
-//      first = false
-//      slave.since(function (err, ts) {
-//        console.log(ts)
-//        cb(null, {since: ts})
-//      })
-//    })
-//    return cs
-//  }
-//
-//  slave.createPullStream = function (opts, done) {
-//    if('function' === typeof opts) {
-//      done = opts; opts = null
-//    }
-//
-//    return window(10, 100) //read from remote MASTER
-//      .pipe(pull.map(function (batch) {
-//        var max = 0
-//        batch.forEach(function (e) {
-//          if(e.ts > max)
-//            max = e.ts
-//        })
-//        batch.push({
-//          type: 'put', key: slave.prefix('seq'), value: max
-//        })
-//        return batch
-//      }))
-//      .pipe(pull.asyncMap(function (batch, cb) {
-//        db.batch(batch, function (err) {
-//          cb(err, batch)
-//        })
-//      }))
-//      .pipe(pull.drain(null, done))
-//  }
-//
-//  return slave
-//}
