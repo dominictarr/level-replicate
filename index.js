@@ -27,19 +27,18 @@ function find (ary, test) {
     if(test(ary[i], i, ary)) return ary[i]
 }
 
-function filterReverse (ary, test) {
-  var l = ary.length, a = []
-  while(l--)
-    if(test(ary[l], l, ary)) a.unshift(ary[l])
-
-  return a
-}
+//function filterReverse (ary, test) {
+//  var l = ary.length, a = []
+//  while(l--)
+//    if(test(ary[l], l, ary)) a.unshift(ary[l])
+//
+//  return a
+//}
 
 function flatten (ary) {
   return ary.reduce(function (ary, _ary) {
     return ary.concat(_ary)
   }, [])
-
 }
 
 function cmp (a, b) {
@@ -65,13 +64,14 @@ function prep () {
 
 exports = module.exports = function (db, masterDb, id) {
 
+  var clock = {} //remember latest version from each dep.
+
   masterDb = masterDb || 'master'
   if('string' === typeof masterDb)
     masterDb = db.sublevel(masterDb)
   var clockDb = masterDb.sublevel('clock')
 
-  //ADD A LOG THAT POINTS TO WHICH KEYS WHERE UPDATED WHEN.
-  
+  //on insert, remember which keys where updated when.
   db.pre(function (op, add, batch) {
     if(!find(batch, function (_op) {
         return _op.value === op.key && _op.prefix === masterDb
@@ -90,8 +90,6 @@ exports = module.exports = function (db, masterDb, id) {
   //get any values that have been over written,
   //group into batches, so it's more efficient communication with db,
   //and delete each set.
-
-  var clock = {}
 
   masterDb.cleanup = function (cb) {
     pl.read(db, {reverse: true})
@@ -112,20 +110,7 @@ exports = module.exports = function (db, masterDb, id) {
             min: String(id+'\x00'+(data.since || 0)),
             tail: opts.tail
           }))
-        })
-      }, defer)
-
-    return serialize(cs)
-  }
-
-  masterDb.createStream = function () {
-    var defer = pull.defer()
-    var cs = ClassicStream(function (read) {
-        read(null, function (err, data) {
-          defer.resolve(masterDb.createMasterStream({
-            min: String(id+'\x00'+(data.since || 0)),
-            tail: opts.tail
-          }))
+          read.pipe(masterDb.createSlaveStream())
         })
       }, defer)
 
@@ -137,18 +122,7 @@ exports = module.exports = function (db, masterDb, id) {
     opts.clock = opts.clock || {}
     var since = opts.min || opts.since || 0
 
-    function rest (clock) {
-
-      var nClock = {}
-      each(clock, function (_, key) {
-        nClock[key] = 0
-      })
-
-      each(opts.clock, function (value, key) {
-        if(nClock[key] < value)
-          nClock[key] = value
-      })
-
+    function rest (nClock) {
       return cat([
         merge(map(nClock, function (value, key) {
           return {min: key + '\x00' + value, max: key+'\x00\xff', tail: false}
@@ -163,6 +137,7 @@ exports = module.exports = function (db, masterDb, id) {
         }), comparator),
         opts.tail ? pl.live(masterDb).pipe(prep()) : pull.empty()
       ])
+      //lookup actual values
       .pipe(pull.asyncMap(function (data, cb) {
          db.get(data.key, function (err, value) {
             data.value = value
@@ -185,11 +160,21 @@ exports = module.exports = function (db, masterDb, id) {
     }
 
     var read
-
     return function (abort, cb) {
       if(!read)
-        masterDb.clock(function (err, nClock) {
+        masterDb.clock(function (err, clock) {
           if(err) return cb(err)
+
+          var nClock = {}
+          each(clock, function (_, key) {
+            nClock[key] = 0
+          })
+
+          each(opts.clock, function (value, key) {
+            if(nClock[key] < value)
+              nClock[key] = value
+          })
+
           ;(read = rest(nClock))(abort, cb)
         })
       else
@@ -200,6 +185,7 @@ exports = module.exports = function (db, masterDb, id) {
   masterDb.clock = function (cb) {
     pl.read(clockDb)
       .pipe(pull.reduce(function (clock, item) {
+
         clock[item.key] = item.value
         return clock
       }, {}, cb))
@@ -227,29 +213,26 @@ exports = module.exports = function (db, masterDb, id) {
       done = opts; opts = null
     }
 
-    return pull.through(console.log)
-   .pipe(pull.map(function (op) {
+    return pull.map(function (op) {
       if(clock[op.id] > op.ts) return
-
       return [
         op,
         {key: op.id+'\x00'+op.ts, value: op.key, type: 'put', prefix: masterDb},
         {key: op.id, value: op.ts, type: 'put', prefix: clockDb}
       ]
-
-    }))
+    })
     .pipe(pull.filter(Boolean))
-    .pipe(pull.map(function (batch) {
-
-      var seen = {}
-      //make sure there is only one clock update per batch
-      batch = filterReverse(batch, function (op) {
-        if(op.prefix !== clockDb)  return true
-        else if (!seen[op.key])    return seen[op.key] = true
-        return false
-      })
-      return batch
-    }))
+//    .pipe(pull.map(function (batch) {
+//
+//      var seen = {}
+//      //make sure there is only one clock update per batch
+//      batch = filterReverse(batch, function (op) {
+//        if(op.prefix !== clockDb)  return true
+//        else if (!seen[op.key])    return seen[op.key] = true
+//        return false
+//      })
+//      return batch
+//    }))
     .pipe(pull.asyncMap(function (batch, cb) {
       db.batch(batch, function (err) {
         cb(err, !!batch)
