@@ -30,7 +30,7 @@ function find (ary, test) {
 function filterReverse (ary, test) {
   var l = ary.length, a = []
   while(l--)
-    if(test(ary[l], l, ary)) a.push(ary[l])
+    if(test(ary[l], l, ary)) a.unshift(ary[l])
 
   return a
 }
@@ -239,6 +239,16 @@ exports = module.exports = function (db, masterDb, id) {
       ]
 
     }).pipe(pull.filter(Boolean))
+//    .pipe(function (read) {
+//
+//      return function (a, c) {
+//        read(function (err, data) {
+//          console.error('>>>>', err, data)
+//          c(err, data)
+//
+//        })
+//      }
+//    })
     .pipe(window(10, 100))
     .pipe(pull.map(function (_batch) {
 
