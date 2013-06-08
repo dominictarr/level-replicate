@@ -8,15 +8,7 @@ var series   = require('continuable-series')
 
 var master   = require('../')
 
-function all (db) {
-  return function (cb) {
-    pl.read(db, {min: '\x00', max: '\xff\xff'})
-      .pipe(pull.reduce(function (all, op) {
-        all[op.key] = op.value
-        return all
-      }, {}, cb))
-  }
-}
+var all      = require('./util').all
 
 process.on('uncaughtException', function (err) {
   console.error(err.stack)
