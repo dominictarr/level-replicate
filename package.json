@@ -30,7 +30,9 @@
     "tape": "~1.0.2",
     "level-test": "~1.2.1",
     "continuable-para": "~1.1.0",
-    "continuable-series": "~1.0.0"
+    "continuable-series": "~1.0.0",
+    "shasum": "0.0.2",
+    "observable": "~2.1.1"
   },
   "scripts": {
     "test": "set -e; for t in test/*.js; do node $t; done"
