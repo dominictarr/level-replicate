@@ -62,6 +62,15 @@ function prep () {
   })
 }
 
+function pCont (continuable) {
+  var n = -1
+  return function (abort, cb) {
+    if(abort) return cb(true)
+    if(++n)   return cb(n === 1 ? true : new Error('only call once'))
+    continuable(cb)
+  }
+}
+
 exports = module.exports = function (db, masterDb, id) {
 
   var clock = {} //remember latest version from each dep.
@@ -107,14 +116,14 @@ exports = module.exports = function (db, masterDb, id) {
     var cs = ClassicStream(function (read) {
         read(null, function (err, data) {
           defer.resolve(masterDb.createMasterStream({
-            min: String(id+'\x00'+(data.since || 0)),
-            tail: opts.tail
+            clock: data,
+            tail: opts && opts.tail
           }))
           read.pipe(masterDb.createSlaveStream())
         })
-      }, defer)
+      }, cat([pCont(masterDb.clock), defer]))
 
-    return serialize(cs)
+  return serialize(cs)
   }
   
   masterDb.createMasterStream = pull.Source(function (opts, onAbort) {
@@ -130,20 +139,25 @@ exports = module.exports = function (db, masterDb, id) {
           return pl.read(masterDb, opts)
             //can remove this once level gets exclusive ranges!
             .pipe(prep())
-            .pipe(pull.filter(function (data) {
-              var c = nClock[data.id]
-              return !c || (c < data.ts) && !!data.key
-            }))
         }), comparator),
-        opts.tail ? pl.live(masterDb).pipe(prep()) : pull.empty()
+        (opts.tail ? pl.live(masterDb).pipe(prep()) : pull.empty())        
       ])
+      .pipe(pull.filter(function (data) {
+        var c = nClock[data.id]
+        if(!data.key) return false
+        if(!c || c < data.ts) {
+          nClock[data.id] = data.ts
+          return true
+        }
+        return false
+      }))
       //lookup actual values
       .pipe(pull.asyncMap(function (data, cb) {
-         db.get(data.key, function (err, value) {
-            data.value = value
-            data.type = err ? 'del' : 'put'
-            cb(null, data)
-          })
+        db.get(data.key, function (err, value) {
+          data.value = value
+          data.type = err ? 'del' : 'put'
+          cb(null, data)
+        })
       }))
       .pipe(function (read) {
         if(!onAbort) return read
@@ -240,7 +254,7 @@ exports = module.exports = function (db, masterDb, id) {
     }))
     .pipe(function (read) {
       read(null, function next(end, data) {
-        if(end) done()
+        if(end) done && done()
         else    read(null, next)
       })
     })
