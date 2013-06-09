@@ -7,7 +7,6 @@ var window    = require('pull-window')
 var pl        = require('pull-level')
 var merge     = require('pull-stream-merge')
 var cat       = require('pull-cat')
-var lookup    = require('./lookup')
 
 function each (obj, iter) {
   for(var key in obj) {
