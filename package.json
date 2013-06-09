@@ -11,7 +11,7 @@
     "monotonic-timestamp": "0.0.8",
     "stream-serializer": "0.0.3",
     "pull-stream-merge": "~1.0.4",
-    "pull-stream": "~2.18.2",
+    "pull-stream": ">=2.19 <3",
     "pull-window": "~1.0.3",
     "stream-to-pull-stream": "~1.2.2",
     "pull-level": "~1.1.4",
