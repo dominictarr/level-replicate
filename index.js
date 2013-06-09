@@ -100,14 +100,16 @@ exports = module.exports = function (db, masterDb, id) {
   //and delete each set.
 
   masterDb.cleanup = function (cb) {
-    pl.read(db, {reverse: true})
-    .pipe(pull.nonUnique(function (d) {
-      return d.value.toString()
-    }))
-    .pipe(pull.map(function () {
-      return {key: d.key, type: 'del'}
-    }))
-    .pipe(pl.write(db, cb))
+    pull(
+      pl.read(db, {reverse: true}),
+        pull.nonUnique(function (d) {
+        return d.value.toString()
+      }),
+      pull.map(function () {
+        return {key: d.key, type: 'del'}
+      }),
+      pl.write(db, cb)
+    )
   }
 
   masterDb.createStream = function (opts) {
@@ -118,7 +120,7 @@ exports = module.exports = function (db, masterDb, id) {
             clock: data,
             tail: opts && opts.tail
           }))
-          read.pipe(masterDb.createSlaveStream())
+          pull(read, masterDb.createSlaveStream())
         })
       }, cat([pCont(masterDb.clock), defer]))
 
@@ -131,45 +133,46 @@ exports = module.exports = function (db, masterDb, id) {
     var since = opts.min || opts.since || 0
 
     function rest (nClock) {
-      return cat([
-        merge(map(nClock, function (value, key) {
-          return {min: key + '\x00' + value, max: key+'\x00\xff', tail: false}
-        }).map(function (opts) {
-          return pl.read(masterDb, opts)
+      return pull(
+        cat([
+          merge(map(nClock, function (value, key) {
+            return {min: key + '\x00' + value, max: key+'\x00\xff', tail: false}
+          }).map(function (opts) {
             //can remove this once level gets exclusive ranges!
-            .pipe(prep())
-        }), comparator),
-        (opts.tail ? pl.live(masterDb).pipe(prep()) : pull.empty())        
-      ])
-      .pipe(pull.filter(function (data) {
-        var c = nClock[data.id]
-        if(!data.key) return false
-        if(!c || c < data.ts) {
-          nClock[data.id] = data.ts
-          return true
-        }
-        return false
-      }))
-      //lookup actual values
-      .pipe(pull.asyncMap(function (data, cb) {
-        db.get(data.key, function (err, value) {
-          data.value = value
-          data.type = err ? 'del' : 'put'
-          cb(null, data)
-        })
-      }))
-      .pipe(function (read) {
-        if(!onAbort) return read
-        return function (abort, cb) {
-          if(abort)
-            onAbort(abort === true ? null : abort) 
-
-          read(abort, function (err, data) {
-            if(err) onAbort(err === true ? null : err)
-            cb(err, data)
+            return pull(pl.read(masterDb, opts), prep())
+          }), comparator),
+          (opts.tail ? pull(pl.live(masterDb), prep()) : pull.empty())        
+        ]),
+        pull.filter(function (data) {
+          var c = nClock[data.id]
+          if(!data.key) return false
+          if(!c || c < data.ts) {
+            nClock[data.id] = data.ts
+            return true
+          }
+          return false
+        }),
+        //lookup actual values
+        pull.asyncMap(function (data, cb) {
+          db.get(data.key, function (err, value) {
+            data.value = value
+            data.type = err ? 'del' : 'put'
+            cb(null, data)
           })
+        }),
+        function (read) {
+          if(!onAbort) return read
+          return function (abort, cb) {
+            if(abort)
+              onAbort(abort === true ? null : abort) 
+
+            read(abort, function (err, data) {
+              if(err) onAbort(err === true ? null : err)
+              cb(err, data)
+            })
+          }
         }
-      })
+      )
     }
 
     var read
@@ -196,12 +199,14 @@ exports = module.exports = function (db, masterDb, id) {
   })
 
   masterDb.clock = function (cb) {
-    pl.read(clockDb)
-      .pipe(pull.reduce(function (clock, item) {
+    pull(
+      pl.read(clockDb),
+      pull.reduce(function (clock, item) {
 
         clock[item.key] = item.value
         return clock
-      }, {}, cb))
+      }, {}, cb)
+    )
   }
 
 
@@ -226,37 +231,39 @@ exports = module.exports = function (db, masterDb, id) {
       done = opts; opts = null
     }
 
-    return pull.map(function (op) {
-      if(clock[op.id] > op.ts) return
-      return [
-        op,
-        {key: op.id+'\x00'+op.ts, value: op.key, type: 'put', prefix: masterDb},
-        {key: op.id, value: op.ts, type: 'put', prefix: clockDb}
-      ]
-    })
-    .pipe(pull.filter(Boolean))
-//    .pipe(pull.map(function (batch) {
-//
-//      var seen = {}
-//      //make sure there is only one clock update per batch
-//      batch = filterReverse(batch, function (op) {
-//        if(op.prefix !== clockDb)  return true
-//        else if (!seen[op.key])    return seen[op.key] = true
-//        return false
-//      })
-//      return batch
-//    }))
-    .pipe(pull.asyncMap(function (batch, cb) {
-      db.batch(batch, function (err) {
-        cb(err, !!batch)
-      })
-    }))
-    .pipe(function (read) {
-      read(null, function next(end, data) {
-        if(end) done && done()
-        else    read(null, next)
-      })
-    })
+    return pull(
+      pull.map(function (op) {
+        if(clock[op.id] > op.ts) return
+        return [
+          op,
+          {key: op.id+'\x00'+op.ts, value: op.key, type: 'put', prefix: masterDb},
+          {key: op.id, value: op.ts, type: 'put', prefix: clockDb}
+        ]
+      }),
+      pull.filter(Boolean),
+  //    .pipe(pull.map(function (batch) {
+  //
+  //      var seen = {}
+  //      //make sure there is only one clock update per batch
+  //      batch = filterReverse(batch, function (op) {
+  //        if(op.prefix !== clockDb)  return true
+  //        else if (!seen[op.key])    return seen[op.key] = true
+  //        return false
+  //      })
+  //      return batch
+  //    }))
+      pull.asyncMap(function (batch, cb) {
+        db.batch(batch, function (err) {
+          cb(err, !!batch)
+        })
+      }),
+      function (read) {
+        read(null, function next(end, data) {
+          if(end) done && done()
+          else    read(null, next)
+        })
+      }
+    )
     //currently not sure why this isn't working...
     //.pipe(pull.drain(null, done))
   }

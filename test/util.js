@@ -8,11 +8,13 @@ var u = exports
 
 exports.all = function all (db) {
   return function (cb) {
-    pl.read(db, {min: '\x00', max: '\xff\xff'})
-      .pipe(pull.reduce(function (all, op) {
+    pull(
+      pl.read(db, {min: '\x00', max: '\xff\xff'}),
+      pull.reduce(function (all, op) {
         all[op.key] = op.value
         return all
-      }, {}, cb))
+      }, {}, cb)
+    )
   }
 }
 
@@ -65,13 +67,15 @@ exports.generate = function (db, opts) {
     var interval = opts.interval || 1
     var delay = opts.delay || 100
 
-    pull.count(count)
-      .pipe(u.slow(interval))
-      .pipe(pull.map(create))
-      .pipe(pl.write(db, function (err) {
+    pull(
+      pull.count(count),
+      u.slow(interval),
+      pull.map(create),
+      pl.write(db, function (err) {
         if(err) throw err
         cb && cb()
-      }))
+      })
+    )
   }
 }
 
