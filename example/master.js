@@ -1,4 +1,4 @@
-var levelup  = require('levelup')
+var level  = require('level')
 var SubLevel = require('level-sublevel')
 var net      = require('net')
 var Master   = require('../')
@@ -7,9 +7,9 @@ var name     = require('random-name')
 var pull     = require('pull-stream')
 var pl       = require('pull-level')
 
-var db = SubLevel(levelup('/tmp/example-master'))
+var db = SubLevel(level('/tmp/example-master'))
 
-var master = Master(db, 'master')
+var master = Master(db, 'master', "M1")
 
 //createServer(db, master)
 net.createServer(function (stream) {
