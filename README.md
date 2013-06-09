@@ -1,31 +1,26 @@
 # level-master
 
-master-slave replication with levelup.
+master-master replication with levelup.
 
-Master/Slave replication is when you have writes to one db,
-and reads from another.
-You can have either many slaves, and a single master, or many masters,
-and a single slave.
-
-Either way, master-slave replication depends on centralization,
-but is very simple, if it fits your usecase.
+Implements scuttlebutt style handshake and then syncs data, then replicates real time changes.
 
 ## Example
 
-Replicate from a central server to clients.
+Replicate from a between two processes.
+One process starts a server, and another connects.
 
 ``` js
-//master.js
+//master1.js
 var levelup  = require('levelup')
 var SubLevel = require('level-sublevel')
 var net      = require('net')
-var Master   = require('level-master')
+var Replicate   = require('level-replicate')
 
 //setup the database.
 var db = SubLevel(levelup('/tmp/example-master'))
 
 //install Master plugin!
-var master = Master(db, 'master')
+var master = Replicate(db, 'master', "MASTER-1")
 
 //create a server, and stream data to who ever connects.
 net.createServer(function (stream) {
@@ -38,21 +33,23 @@ net.createServer(function (stream) {
 Then, the code for the client!
 
 ``` js
-//slave.js
+//master2.js
 var levelup  = require('levelup')
 var SubLevel = require('level-sublevel')
 var net      = require('net')
 var Master   = require('level-master')
 
 var db = SubLevel(levelup('/tmp/example-slave'))
-var slave = Master.Slave(db, 'slave')
+var master = Replicate(db, 'master', "MASTER-2")
 
 var stream = net.connect(9999)
 
-stream.pipe(slave.createStream()).pipe(stream)
+stream.pipe(master.createStream({tail: true})).pipe(stream)
 ```
 
 Wow, that was simple.
+
+<!--
 
 ## did someone say "webscale"?
 
@@ -74,6 +71,8 @@ giving you global data.
 (it's important here that the data from each node does not collide.
 keys from each node need a different prefix or to be stored in a
 separate [sublevel](https://github.com/dominictarr/level-sublevel))
+
+-->
 
 ## License
 
