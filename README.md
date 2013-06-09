@@ -1,4 +1,4 @@
-# level-master
+# level-replicate
 
 master-master replication with levelup.
 

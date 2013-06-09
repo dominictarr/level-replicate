@@ -1,14 +1,11 @@
 {
-  "name": "level-master",
-  "description": "",
+  "name": "level-replicate",
+  "description": "scuttlebutt style replication for level-*",
   "version": "1.0.2",
-  "homepage": "https://github.com/dominictarr/level-master",
+  "homepage": "https://github.com/dominictarr/level-replicate",
   "repository": {
     "type": "git",
-    "url": "git://github.com/dominictarr/level-master.git"
-  },
-  "peerDependencies": {
-    "level-sublevel": ">=4.1.0"
+    "url": "git://github.com/dominictarr/level-replicate.git"
   },
   "dependencies": {
     "monotonic-timestamp": "0.0.8",
