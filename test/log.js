@@ -1,11 +1,8 @@
 
-var path = '/tmp/test-level-master'
-var path2 = '/tmp/test-level-slave'
+var path = 'test-level-master'
+var path2 = 'test-level-slave'
 
-require('rimraf').sync(path)
-require('rimraf').sync(path2)
-
-var levelup = require('levelup')
+var levelup = require('level-test')()
 var SubLevel = require('level-sublevel')
 
 var db     = SubLevel(levelup(path))

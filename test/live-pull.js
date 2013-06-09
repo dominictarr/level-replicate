@@ -1,4 +1,4 @@
-var levelup  = require('levelup')
+var levelup  = require('level-test')()
 var SubLevel = require('level-sublevel')
 var net      = require('net')
 var Master   = require('../')
@@ -8,12 +8,9 @@ var help     = require('./helper')
 var pl       = require('pull-level')
 var zip      = require('pull-zip')
 
-var rmrf = require('rimraf')
+var path = 'test-level-master-live'
+var _path = 'test-level-slave-live'
 
-var path = '/tmp/test-level-master-live'
-var _path = '/tmp/test-level-slave-live'
-rmrf.sync(path)
-rmrf.sync(_path)
 var db = SubLevel(levelup(path))
 var _db = SubLevel(levelup(_path))
 
