@@ -1,7 +1,7 @@
 {
   "name": "level-replicate",
   "description": "scuttlebutt style replication for level-*",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "homepage": "https://github.com/dominictarr/level-replicate",
   "repository": {
     "type": "git",
@@ -9,14 +9,17 @@
   },
   "dependencies": {
     "monotonic-timestamp": "0.0.8",
-    "stream-serializer": "0.0.3",
     "pull-stream-merge": "~1.0.4",
     "pull-stream": ">=2.19 <3",
     "pull-window": "~1.0.3",
     "stream-to-pull-stream": "~1.2.2",
     "pull-level": "~1.1.4",
     "pull-cat": "~1.1.4",
-    "pull-stream-to-stream": "~1.2.5"
+    "pull-stream-to-stream": "~1.2.5",
+    "json-buffer": "~2.0.2",
+    "stream-combiner": "0.0.2",
+    "msgpack-stream": "0.0.3",
+    "stream-serializer": "~1.1.1"
   },
   "devDependencies": {
     "level-sublevel": ">=4.6 <5",
