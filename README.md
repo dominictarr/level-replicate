@@ -11,10 +11,10 @@ One process starts a server, and another connects.
 
 ``` js
 //master1.js
-var levelup  = require('levelup')
-var SubLevel = require('level-sublevel')
-var net      = require('net')
-var Replicate   = require('level-replicate')
+var levelup   = require('levelup')
+var SubLevel  = require('level-sublevel')
+var net       = require('net')
+var Replicate = require('level-replicate')
 
 //setup the database.
 var db = SubLevel(levelup('/tmp/example-master'))
@@ -34,10 +34,10 @@ Then, the code for the client!
 
 ``` js
 //master2.js
-var levelup  = require('levelup')
-var SubLevel = require('level-sublevel')
-var net      = require('net')
-var Master   = require('level-master')
+var levelup   = require('levelup')
+var SubLevel  = require('level-sublevel')
+var net       = require('net')
+var Replicate = require('level-replicate')
 
 var db = SubLevel(levelup('/tmp/example-slave'))
 var master = Replicate(db, 'master', "MASTER-2")
@@ -48,6 +48,20 @@ stream.pipe(master.createStream({tail: true})).pipe(stream)
 ```
 
 Wow, that was simple.
+
+## Binary data.
+
+by default, level-replicate supports buffers by converting them to base64 via `stream-serializer` and `json-buffer`.
+If you desire more efficiency, use `level-replicate/msgpack`
+
+``` js
+var Replicate = require('level-replicate/msgpack')
+
+var db = SubLevel(levelup('/tmp/example-slave'))
+var master = Replicate(db, 'master', "MASTER-2")
+
+
+```
 
 <!--
 
