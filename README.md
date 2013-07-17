@@ -11,13 +11,13 @@ One process starts a server, and another connects.
 
 ``` js
 //master1.js
-var levelup   = require('levelup')
+var level   = require('level')
 var SubLevel  = require('level-sublevel')
 var net       = require('net')
 var Replicate = require('level-replicate')
 
 //setup the database.
-var db = SubLevel(levelup('/tmp/example-master'))
+var db = SubLevel(level('/tmp/example-master'))
 
 //install Master plugin!
 var master = Replicate(db, 'master', "MASTER-1")
@@ -34,12 +34,12 @@ Then, the code for the client!
 
 ``` js
 //master2.js
-var levelup   = require('levelup')
+var levelup   = require('level')
 var SubLevel  = require('level-sublevel')
 var net       = require('net')
 var Replicate = require('level-replicate')
 
-var db = SubLevel(levelup('/tmp/example-slave'))
+var db = SubLevel(level('/tmp/example-slave'))
 var master = Replicate(db, 'master', "MASTER-2")
 
 var stream = net.connect(9999)
@@ -57,7 +57,7 @@ If you desire more efficiency, use `level-replicate/msgpack`
 ``` js
 var Replicate = require('level-replicate/msgpack')
 
-var db = SubLevel(levelup('/tmp/example-slave'))
+var db = SubLevel(level('/tmp/example-slave'))
 var master = Replicate(db, 'master', "MASTER-2")
 
 
