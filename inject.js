@@ -87,8 +87,12 @@ return function (db, masterDb, id) {
       })
     ) {
       var ts = timestamp()
-      add({key: id+'\x00'+ts, value: op.key, type: 'put', prefix: masterDb})
-      add({key: id, value: ''+ts, type: 'put', prefix: clockDb})
+      add({key: id+'\x00'+ts, value: op.key, type: 'put', prefix: masterDb,
+        valueEncoding: 'utf8', keyEncoding: 'utf8'
+      })
+      add({key: id, value: ''+ts, type: 'put', prefix: clockDb,
+        valueEncoding: 'utf8', keyEncoding: 'utf8'
+      })
     }
   })
 
