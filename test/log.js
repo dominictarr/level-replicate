@@ -1,3 +1,6 @@
+console.log('**********************')
+console.log('  test/log.js')
+console.log('**********************')
 
 var path = 'test-level-master'
 var path2 = 'test-level-slave'
@@ -43,8 +46,6 @@ test('setup', function (t) {
     t.end()
   })
 })
-
-process.on('uncaughtException', console.error)
 
 test('createPullStream', function (t) {
   //replicate!

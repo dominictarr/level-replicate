@@ -14,8 +14,6 @@ var _path = 'test-level-slave-live'
 var db = SubLevel(levelup(path))
 var _db = SubLevel(levelup(_path))
 
-process.on('uncaughtException', console.error)
-
 var master = Master(db, 'master', 'TEST1')
 var slave  = Master(_db, 'slave', 'TEST2')
 
@@ -24,10 +22,10 @@ slave.post(console.log.bind(console, '>'))
 require('tape')('live replicate', function (t) {
 
   master.createMasterStream({tail: true})
-  .pipe(pull.through(console.log.bind(null, '>')))
+  .pipe(pull.through(console.log.bind(console, '>')))
   .pipe(slave.createSlaveStream())
 
-  db.post(console.log)
+  db.post(console.log.bind(console))
 
   var i = 5
   var int = setInterval(function () {

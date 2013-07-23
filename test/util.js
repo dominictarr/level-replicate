@@ -1,4 +1,4 @@
-var pull   = require('pull-stream')
+  var pull   = require('pull-stream')
 var pl     = require('pull-level')
 var o      = require('observable')
 var shasum = require('shasum')
@@ -27,15 +27,18 @@ exports.slow = function (interval) {
 }
 
 exports.eventual = pull.Source(function (db, delay) {
-  var _cb, timer, hash
+  var _cb, timer, hash, i = 0
 
   function queue () {
+    var j = ++i
     clearTimeout(timer)
     timer = setTimeout(function () {
-      u.all(db) (function (err, all) {
-        if(_cb)
-          _cb(null, shasum(all))
-      })
+      (function attempt () {
+        u.all(db) (function (err, all) {
+          if(j !== i) return
+          if(_cb) _cb(null, shasum(all))
+        })
+      })()
     }, delay)
   }
 
@@ -85,20 +88,31 @@ exports.observePull = function obPull (s) {
   return v
 }
 
-exports.eventuallyConsistent = function (d1, d2) {
+exports.eventuallyConsistent = function (d1, d2, delay) {
+  delay = delay || 100
   var h1, h2
   var consistent = o.compute([
-    h1 = u.observePull(u.eventual(d1, 100)),
-    h2 = u.observePull(u.eventual(d2, 100))
+    h1 = u.observePull(u.eventual(d1, delay)),
+    h2 = u.observePull(u.eventual(d2, delay))
   ], function (h1, h2) {
     if(!h1 || !h2) return
     return h1 == h2
   })
 
-  process.on('exit', function () {
-    console.error(h1() + ' === ' + h2())
+  var c = 0, int = 
+  setInterval(function () {
+    if(consistent()) {
+      if(++c > 10)
+        onExit()
+    } else
+      c = 0
+  }, 100)
+
+  function onExit() {
+    clearInterval(int)
+    console.log(h1() + ' === ' + h2())
     assert.ok(consistent())
     assert.equal(h1(), h2())
-  })
+  }
 }
 

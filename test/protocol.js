@@ -4,10 +4,6 @@ var sublevel = require('level-sublevel')
 var master   = require('../')
 var pull     = require('pull-stream')
 
-process.on('uncaughtException', function (e) {
-  console.error(e.stack)
-})
-
 test('protocol', function (t) {
   var db = sublevel(level('protocol-1'))
 

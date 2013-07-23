@@ -1,3 +1,6 @@
+console.log('**********************')
+console.log('  test/replicate.js')
+console.log('**********************')
 var path = 'test-level-master'
 var path2 = 'test-level-slave'
 
@@ -17,11 +20,6 @@ var test   = require('tape')
 var master = Master(db, 'master', 'T1')
 
 slave = Master(_db, 'master', 'T2')
-
-process.on('uncaughtException', function (err) {
-  console.error(err.stack || err)
-  process.exit(1)
-})
 
 test('setup', function (t) {
   help.populate(db, 100, function (err) {

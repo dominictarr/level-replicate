@@ -10,10 +10,6 @@ var master   = require('../')
 
 var all      = require('./util').all
 
-process.on('uncaughtException', function (err) {
-  console.error(err.stack)
-})
-
 function put (db, key, value) {
   return function (cb) {
     db.put(key, value, cb)

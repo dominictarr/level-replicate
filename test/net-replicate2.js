@@ -10,7 +10,6 @@ var d2     = sub(level('db2'))
 var m2     = master(d2, 'master', 'M2')
 
 var port   = ~~(10000 + Math.random()*50000)
-var stream
 
 u.generate(d1, {
   count: 10,
@@ -18,29 +17,20 @@ u.generate(d1, {
   prefix: 'a',
   }) (function () {
 
-        var server = net.createServer(function (stream) {
-          stream.pipe(m1.createStream({tail: true})).pipe(stream)
-          stream.on('data', function (data) {
-            console.log('2 -> 1:', data.toString())
-          })
-        }).listen(port, function () {
-          stream = net.connect(port)
-          stream.pipe(m2.createStream({tail: true})).pipe(stream)
-          stream.on('data', function (data) {
-            console.log('1 -> 2:', data.toString())
-          })
+    var s1 = m1.createStream({tail: true})
+    var s2 = m2.createStream({tail: true})
+
+    s1.pipe(s2).pipe(s1)
+
+    u.generate(d2, {
+      prefix: 'b',
+    }) (function () {
+          setTimeout(function () {
+            s1.end()
+          }, 100)    
         })
 
-        u.generate(d2, {
-          prefix: 'b',
-        }) (function () {
-              setTimeout(function () {
-                stream.end()
-                server.close()
-              }, 100)    
-            })
-
-      })
+    })
 
 u.eventuallyConsistent(d1, d2)
 

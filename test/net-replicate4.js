@@ -14,19 +14,16 @@ var d3     = sub(level('db3'))
 var m3     = master(d3, 'master', 'M3')
 
 var port   = ~~(10000 + Math.random()*50000)
-var stream1, stream2
 
-var server = net.createServer(function (stream) {
-  stream.pipe(m3.createStream({tail: true})).pipe(stream)
-  stream.on('data', function (data) {
-    console.log('DATA:', data.toString())
-  })
-}).listen(port, function () {
-  stream1 = net.connect(port)
-  stream1.pipe(m1.createStream({tail: true})).pipe(stream1)
-  stream2 = net.connect(port)
-  stream2.pipe(m2.createStream({tail: true})).pipe(stream2)
-})
+var s1 = m3.createStream({tail: true})
+var s2 = m1.createStream({tail: true})
+
+s1.pipe(s2).pipe(s1)
+
+var s3 = m2.createStream({tail: true})
+var s4 = m3.createStream({tail: true})
+
+s3.pipe(s4).pipe(s3)
 
 
 para(
@@ -34,9 +31,7 @@ para(
   u.generate(d2)
 ) (function () {
     setTimeout(function () {
-      stream1.end()
-      stream2.end()
-      server.close()
+      s1.end(); s3.end()
     }, 100)
   })
 

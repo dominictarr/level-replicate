@@ -5,10 +5,6 @@ var sublevel = require('level-sublevel')
 var master   = require('../')
 var timestamp = require('monotonic-timestamp')
 
-process.on('uncaughtException', function (err) {
-  console.error(err.stack)
-})
-
 test('vector clock', function (t) {
   var db = sublevel(level('vectorClock'))
 
@@ -22,7 +18,7 @@ test('vector clock', function (t) {
     masterDb.clock(function (err, clock) {
       t.notOk(err)
       t.ok(clock.TEST > ts)
-      console.log(clock, ts)
+      console.log([clock, ts])
       t.end()
     })
   })
