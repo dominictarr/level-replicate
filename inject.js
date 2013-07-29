@@ -6,6 +6,7 @@ var window    = require('pull-window')
 var pl        = require('pull-level')
 var merge     = require('pull-stream-merge')
 var cat       = require('pull-cat')
+var sublevel  = require('level-sublevel')
 
 function each (obj, iter) {
   for(var key in obj) {
@@ -75,9 +76,11 @@ return function (db, masterDb, id) {
 
   var clock = {} //remember latest version from each dep.
 
+  sublevel(db)
   masterDb = masterDb || 'master'
   if('string' === typeof masterDb)
     masterDb = db.sublevel(masterDb)
+  sublevel(masterDb)
   var clockDb = masterDb.sublevel('clock')
 
   //on insert, remember which keys where updated when.
