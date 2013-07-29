@@ -12,12 +12,11 @@ One process starts a server, and another connects.
 ``` js
 //master1.js
 var level   = require('level')
-var SubLevel  = require('level-sublevel')
 var net       = require('net')
 var Replicate = require('level-replicate')
 
 //setup the database.
-var db = SubLevel(level('/tmp/example-master'))
+var db = level('/tmp/example-master')
 
 //install Master plugin!
 var master = Replicate(db, 'master', "MASTER-1")
@@ -35,11 +34,10 @@ Then, the code for the client!
 ``` js
 //master2.js
 var levelup   = require('level')
-var SubLevel  = require('level-sublevel')
 var net       = require('net')
 var Replicate = require('level-replicate')
 
-var db = SubLevel(level('/tmp/example-slave'))
+var db = level('/tmp/example-slave')
 var master = Replicate(db, 'master', "MASTER-2")
 
 var stream = net.connect(9999)

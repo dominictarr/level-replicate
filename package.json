@@ -19,10 +19,10 @@
     "json-buffer": "~2.0.3",
     "stream-combiner": "0.0.2",
     "msgpack-stream": "0.0.10",
-    "stream-serializer": "~1.1.1"
+    "stream-serializer": "~1.1.1",
+    "level-sublevel": ">=4.6 <5"
   },
   "devDependencies": {
-    "level-sublevel": ">=4.6 <5",
     "random-name": "~0.1.0",
     "rimraf": "~2.1.4",
     "pull-crypto": "~1.0",

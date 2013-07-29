@@ -1,6 +1,5 @@
 var level    = require('level-test')()
 var test     = require('tape')
-var sublevel = require('level-sublevel')
 var pl       = require('pull-level')
 var pull     = require('pull-stream')
 var para     = require('continuable-para')
@@ -24,8 +23,8 @@ function replicate (m1, m2) {
 }
 
 test('replicate', function (t) {
-  var db1 = sublevel(level('replicate_1'))
-  var db2 = sublevel(level('replicate_2'))
+  var db1 = level('replicate_1')
+  var db2 = level('replicate_2')
 
   var m1 = master(db1, 'master', "M1")
   var m2 = master(db2, 'master', "M2")

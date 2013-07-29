@@ -1,12 +1,11 @@
 var net    = require('net')
 var master = require('../')
 var level  = require('level-test')()
-var sub    = require('level-sublevel')
 var u      = require('./util')
 
-var d1     = sub(level('db1'))
+var d1     = level('db1')
 var m1     = master(d1, 'master', 'M1')
-var d2     = sub(level('db2'))
+var d2     = level('db2')
 var m2     = master(d2, 'master', 'M2')
 
 var port   = ~~(10000 + Math.random()*50000)
