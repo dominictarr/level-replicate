@@ -1,12 +1,11 @@
 
 var level    = require('level-test')()
 var test     = require('tape')
-var sublevel = require('level-sublevel')
 var master   = require('../')
 var timestamp = require('monotonic-timestamp')
 
 test('vector clock', function (t) {
-  var db = sublevel(level('vectorClock'))
+  var db = level('vectorClock')
 
   var masterDb = master(db, 'master', 'TEST')
 

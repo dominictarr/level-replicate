@@ -11,8 +11,8 @@ var zip      = require('pull-zip')
 var path = 'test-level-master-live'
 var _path = 'test-level-slave-live'
 
-var db = SubLevel(levelup(path))
-var _db = SubLevel(levelup(_path))
+var db = levelup(path)
+var _db = levelup(_path)
 
 var master = Master(db, 'master', 'TEST1')
 var slave  = Master(_db, 'slave', 'TEST2')

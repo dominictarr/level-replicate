@@ -2,12 +2,11 @@
 var net    = require('net')
 var master = require('../')
 var level  = require('level-test')()
-var sub    = require('level-sublevel')
 var u      = require('./util')
 
-var d1     = sub(level('db1', {valueEncoding: 'binary'}))
+var d1     = level('db1', {valueEncoding: 'binary'})
 var m1     = master(d1, 'master', 'M1')
-var d2     = sub(level('db2', {valueEncoding: 'binary'}))
+var d2     = level('db2', {valueEncoding: 'binary'})
 var m2     = master(d2, 'master', 'M2')
 
 //d2.post(console.log)

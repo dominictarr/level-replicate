@@ -5,10 +5,9 @@ var path = 'test-level-master'
 var path2 = 'test-level-slave'
 
 var levelup = require('level-test')()
-var SubLevel = require('level-sublevel')
 
-var db   = SubLevel(levelup(path))
-var _db  = SubLevel(levelup(path2))
+var db   = levelup(path)
+var _db  = levelup(path2)
 
 var Master = require('../')
 var pull   = require('pull-stream')

@@ -1,11 +1,10 @@
 var level    = require('level-test')()
 var test     = require('tape')
-var sublevel = require('level-sublevel')
 var master   = require('../')
 var pull     = require('pull-stream')
 
 test('protocol', function (t) {
-  var db = sublevel(level('protocol-1'))
+  var db = level('protocol-1')
 
   var masterDb = master(db, 'master', 'TEST')
 
