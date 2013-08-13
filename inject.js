@@ -77,13 +77,15 @@ return function (db, masterDb, id) {
 
   masterDb = masterDb || 'master'
   if('string' === typeof masterDb)
-    masterDb = db.sublevel(masterDb)
-  var clockDb = masterDb.sublevel('clock')
+    masterDb = db.sublevel(masterDb, {encoding: 'utf8'})
+  var clockDb = masterDb.sublevel('clock', {encoding: 'utf8'})
 
   //on insert, remember which keys where updated when.
   db.pre(function (op, add, batch) {
+    var prefix = masterDb.prefix()
+
     if(!find(batch, function (_op) {
-        return _op.value === op.key && _op.prefix === masterDb
+        return _op.value === op.key && _op.key.indexOf(prefix) === 0
       })
     ) {
       var ts = timestamp()
@@ -129,7 +131,7 @@ return function (db, masterDb, id) {
         })
       }, cat([pCont(masterDb.clock), defer]))
 
-  return serialize(cs)
+    return serialize(cs)
   }
   
   masterDb.createMasterStream = pull.Source(function (opts, onAbort) {
