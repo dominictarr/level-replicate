@@ -22,7 +22,7 @@
     "stream-serializer": "~1.1.1"
   },
   "devDependencies": {
-    "level-sublevel": ">=4.6 <5",
+    "level-sublevel": ">=5.0.1 <6",
     "random-name": "~0.1.0",
     "rimraf": "~2.1.4",
     "pull-crypto": "~1.0",
