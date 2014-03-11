@@ -77,8 +77,8 @@ return function (db, masterDb, id) {
 
   masterDb = masterDb || 'master'
   if('string' === typeof masterDb)
-    masterDb = db.sublevel(masterDb, {encoding: 'utf8'})
-  var clockDb = masterDb.sublevel('clock', {encoding: 'utf8'})
+    masterDb = db.sublevel(masterDb, {keyEncoding: 'utf8', valueEncoding: 'utf8'})
+  var clockDb = masterDb.sublevel('clock', {keyEncoding: 'utf8', valueEncoding: 'utf8'})
 
   //on insert, remember which keys where updated when.
   db.pre(function (op, add, batch) {
@@ -112,7 +112,7 @@ return function (db, masterDb, id) {
         pull.nonUnique(function (d) {
         return d.value.toString()
       }),
-      pull.map(function () {
+      pull.map(function (d) {
         return {key: d.key, type: 'del'}
       }),
       pl.write(db, cb)
@@ -133,7 +133,7 @@ return function (db, masterDb, id) {
 
     return serialize(cs)
   }
-  
+
   masterDb.createMasterStream = pull.Source(function (opts, onAbort) {
     opts = opts || {}
     opts.clock = opts.clock || {}
@@ -148,7 +148,7 @@ return function (db, masterDb, id) {
             //can remove this once level gets exclusive ranges!
             return pull(pl.read(masterDb, opts), prep())
           }), comparator),
-          (opts.tail ? pull(pl.live(masterDb), prep()) : pull.empty())        
+          (opts.tail ? pull(pl.live(masterDb), prep()) : pull.empty())
         ]),
         pull.filter(function (data) {
           var c = nClock[data.id]
@@ -171,7 +171,7 @@ return function (db, masterDb, id) {
           if(!onAbort) return read
           return function (abort, cb) {
             if(abort)
-              onAbort(abort === true ? null : abort) 
+              onAbort(abort === true ? null : abort)
 
             read(abort, function (err, data) {
               if(err) onAbort(err === true ? null : err)
