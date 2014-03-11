@@ -112,7 +112,7 @@ return function (db, masterDb, id) {
         pull.nonUnique(function (d) {
         return d.value.toString()
       }),
-      pull.map(function () {
+      pull.map(function (d) {
         return {key: d.key, type: 'del'}
       }),
       pl.write(db, cb)
