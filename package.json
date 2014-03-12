@@ -24,7 +24,7 @@
   "devDependencies": {
     "level-sublevel": ">=5.0.1 <6",
     "random-name": "~0.1.0",
-    "rimraf": "~2.1.4",
+    "rimraf": "^2.2.6",
     "pull-crypto": "~1.0",
     "pull-zip": "1",
     "tape": "~1.0.4",
@@ -32,7 +32,8 @@
     "continuable-para": "~1.0.0",
     "continuable-series": "~1.1.0",
     "shasum": "0.0.2",
-    "observable": "~2.1.1"
+    "observable": "~2.1.1",
+    "level": "^0.18.0"
   },
   "scripts": {
     "test": "set -e; for t in test/*.js; do node $t; done"
