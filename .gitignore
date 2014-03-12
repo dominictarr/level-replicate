@@ -1,3 +1,5 @@
 node_modules
 node_modules/*
 npm_debug.log
+test/_db1
+test/_db2
