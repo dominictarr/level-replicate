@@ -10,10 +10,10 @@
   "dependencies": {
     "monotonic-timestamp": "0.0.8",
     "pull-stream-merge": "~1.0.4",
-    "pull-stream": ">=2.20 <3",
+    "pull-stream": "~2.21.0",
     "pull-window": "~1.0.3",
     "stream-to-pull-stream": "~1.2.2",
-    "pull-level": "~1.1.4",
+    "pull-level": "~1.1.10",
     "pull-cat": "~1.1.4",
     "pull-stream-to-stream": "~1.2.5",
     "json-buffer": "~2.0.3",
