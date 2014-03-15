@@ -53,7 +53,6 @@ run = function (key, expectedWireCalls) {
     var wireCallTimes = 1;
 
     m2s.on('data', function () {
-      console.log('data', wireCallTimes, expectedWireCalls)
       if (wireCallTimes < expectedWireCalls) return wireCallTimes++;
       // collect result
       var db1result = ''
@@ -71,7 +70,6 @@ run = function (key, expectedWireCalls) {
       var doneTimes = 0
       function done() {
         if (doneTimes < 1) return doneTimes++;
-        console.log('done', doneTimes)
 
         t.ok(db1result, 'db1 has content')
         t.equal(db1result, db2result, 'contents matches')
