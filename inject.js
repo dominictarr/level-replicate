@@ -243,8 +243,8 @@ return function (db, masterDb, id) {
         if(clock[op.id] > op.ts) return
         return [
           op,
-          {key: op.id+'\x00'+op.ts, value: op.key, type: 'put', prefix: masterDb},
-          {key: op.id, value: op.ts, type: 'put', prefix: clockDb}
+          {key: op.id+'\x00'+op.ts, value: op.key, type: 'put', prefix: masterDb, keyEncoding: 'utf8', valueEncoding: 'utf8'},
+          {key: op.id, value: op.ts, type: 'put', prefix: clockDb, keyEncoding: 'utf8', valueEncoding: 'utf8'}
         ]
       }),
       pull.filter(Boolean),
