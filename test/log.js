@@ -4,6 +4,7 @@ console.log('**********************')
 
 var path = 'test-level-master'
 var path2 = 'test-level-slave'
+var pull = require('pull-stream')
 
 var levelup = require('level-test')()
 var SubLevel = require('level-sublevel')
@@ -25,11 +26,13 @@ var master   = require('../')
 
 function all (db) {
   return function (cb) {
-    pl.read(db, {min:'', max: '\xff\xff'})
-      .pipe(pull.reduce(function (all, op) {
+    pull(
+      pl.read(db, {min:'', max: '\xff\xff'}),
+      pull.reduce(function (all, op) {
         all[op.key] = op.value
         return all
-      }, {}, cb))
+      }, {}, cb)
+    )
   }
 }
 
@@ -50,20 +53,22 @@ test('setup', function (t) {
 test('createPullStream', function (t) {
   //replicate!
 
-  master.createMasterStream({clock: {}})
+  pull(
+    master.createMasterStream({clock: {}}),
 //  .pipe(pull.through(console.log.bind(null, '>')))
-  .pipe(slave.createSlaveStream(function (err) {
+    slave.createSlaveStream(function (err) {
 
-    if(err) throw err
+      if(err) throw err
 
-    console.log('REP')
+      console.log('REP')
 
-    para(all(db), all(db)) (function (err, all) {
-      t.notOk(err)
-      t.deepEqual(all.shift(), all.shift())
-      t.end()
+      para(all(db), all(db)) (function (err, all) {
+        t.notOk(err)
+        t.deepEqual(all.shift(), all.shift())
+        t.end()
+      })
     })
-  }))
+  )
 })
 
 //master-slave replication must pull from master.
