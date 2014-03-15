@@ -76,9 +76,13 @@ return function (db, masterDb, id) {
   var clock = {} //remember latest version from each dep.
 
   masterDb = masterDb || 'master'
-  if('string' === typeof masterDb)
-    masterDb = db.sublevel(masterDb, {keyEncoding: 'utf8', valueEncoding: 'utf8'})
-  var clockDb = masterDb.sublevel('clock', {keyEncoding: 'utf8', valueEncoding: 'utf8'})
+  if('string' === typeof masterDb) {
+    masterDb = db.sublevel(masterDb, {keyEncoding: 'utf8',
+      valueEncoding: 'utf8'})
+  }
+  var clockDb = masterDb.sublevel('clock', {keyEncoding: 'utf8',
+    valueEncoding: 'utf8'
+  })
 
   //on insert, remember which keys where updated when.
   db.pre(function (op, add, batch) {
@@ -243,8 +247,10 @@ return function (db, masterDb, id) {
         if(clock[op.id] > op.ts) return
         return [
           op,
-          {key: op.id+'\x00'+op.ts, value: op.key, type: 'put', prefix: masterDb},
-          {key: op.id, value: op.ts, type: 'put', prefix: clockDb}
+          {key: op.id+'\x00'+op.ts, value: op.key, type: 'put',
+            prefix: masterDb, keyEncoding: 'utf8', valueEncoding: 'utf8'},
+          {key: op.id, value: op.ts, type: 'put', prefix: clockDb,
+            keyEncoding: 'utf8', valueEncoding: 'utf8'}
         ]
       }),
       pull.filter(Boolean),
