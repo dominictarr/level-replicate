@@ -28,11 +28,12 @@
     "pull-crypto": "~1.0",
     "pull-zip": "1",
     "tape": "~1.0.4",
-    "level-test": "~1.4.2",
     "continuable-para": "~1.0.0",
     "continuable-series": "~1.1.0",
     "shasum": "0.0.2",
-    "observable": "~2.1.1"
+    "observable": "~2.1.1",
+    "memdown": "~0.7.0",
+    "level-test": "~1.6.2"
   },
   "scripts": {
     "test": "set -e; for t in test/*.js; do node $t; done"
