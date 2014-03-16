@@ -1,3 +1,4 @@
+console.log('NetReplicate3')
 var net    = require('net')
 var master = require('../')
 var level  = require('level-test')()

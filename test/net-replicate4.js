@@ -1,3 +1,4 @@
+console.log('NetReplicate4')
 
 var net    = require('net')
 var master = require('../')

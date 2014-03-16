@@ -1,3 +1,4 @@
+console.log('NetReplicate1')
 require('util')
 
 var net    = require('net')

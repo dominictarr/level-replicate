@@ -1,3 +1,4 @@
+console.log('NetReplicate_MsgPack')
 
 var net    = require('net')
 var master = require('../msgpack')

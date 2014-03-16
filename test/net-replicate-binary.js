@@ -1,3 +1,4 @@
+console.log('NetReplicate_Binary')
 
 var net    = require('net')
 var master = require('../')
