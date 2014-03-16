@@ -24,7 +24,7 @@
   "devDependencies": {
     "level-sublevel": ">=5.0.1 <6",
     "random-name": "~0.1.0",
-    "rimraf": "~2.1.4",
+    "rimraf": "^2.2.6",
     "pull-crypto": "~1.0",
     "pull-zip": "1",
     "tape": "~2.10.2",
@@ -32,7 +32,6 @@
     "continuable-series": "~1.1.0",
     "shasum": "0.0.2",
     "observable": "~2.1.1",
-    "memdown": "~0.7.0",
     "level-test": "~1.6.2"
   },
   "scripts": {
