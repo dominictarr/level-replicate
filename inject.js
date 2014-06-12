@@ -71,7 +71,7 @@ function pCont (continuable) {
 
 module.exports = function (serialize) {
 
-return function (db, masterDb, id) {
+return function (db, masterDb, id, preOpts) {
 
   var clock = {} //remember latest version from each dep.
 
@@ -81,7 +81,12 @@ return function (db, masterDb, id) {
   var clockDb = masterDb.sublevel('clock', {keyEncoding: 'utf8', valueEncoding: 'utf8'})
 
   //on insert, remember which keys where updated when.
-  db.pre(function (op, add, batch) {
+  if (preOpts) {
+    db.pre(preOpts, preHook)
+  } else {
+    db.pre(preHook)
+  }
+  function preHook (op, add, batch) {
     var prefix = masterDb.prefix()
 
     if(!find(batch, function (_op) {
@@ -96,7 +101,7 @@ return function (db, masterDb, id) {
         valueEncoding: 'utf8', keyEncoding: 'utf8'
       })
     }
-  })
+  }
 
   //cleanup old records.
   //run this every so often if you have lots of overwrites.
