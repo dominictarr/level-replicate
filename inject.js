@@ -69,11 +69,18 @@ function pCont (continuable) {
   }
 }
 
+function getPrefix (op) {
+  if (typeof op.prefix === 'string') return op.prefix
+  if (typeof op.prefix === 'function') return op.prefix()
+  if (typeof op.prefix === 'object') return op.prefix.prefix()
+  return null
+}
+
 module.exports = function (serialize) {
 
-return function (db, masterDb, id, opts) {
-  opts = opts || {}
-  opts.recursive = opts.recursive || false
+return function (db, masterDb, id, options) {
+  options = options || {}
+  options.recursive = options.recursive || false
 
   var clock = {} //remember latest version from each dep.
 
@@ -83,8 +90,17 @@ return function (db, masterDb, id, opts) {
   var clockDb = masterDb.sublevel('clock', {keyEncoding: 'utf8', valueEncoding: 'utf8'})
 
   //on insert, remember which keys where updated when.
-  db.pre({start: '\x00', end: '\xff\xff'}, function (op, add, batch) {
+  if (options.recursive) {
+    db.pre({start: '\x00', end: '\xff\xff', safe: false}, preHook)
+  } else {
+    db.pre(preHook)
+  }
+
+  function preHook (op, add, batch) {
     var prefix = masterDb.prefix()
+
+    var opPrefix = getPrefix(op)
+    if (opPrefix && opPrefix.indexOf(prefix) === 0) return
 
     if(!find(batch, function (_op) {
         return _op.value === op.key && _op.key.indexOf(prefix) === 0
@@ -98,7 +114,7 @@ return function (db, masterDb, id, opts) {
         valueEncoding: 'utf8', keyEncoding: 'utf8'
       })
     }
-  })
+  }
 
   //cleanup old records.
   //run this every so often if you have lots of overwrites.

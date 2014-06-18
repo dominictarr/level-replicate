@@ -59,8 +59,16 @@ var Replicate = require('level-replicate/msgpack')
 
 var db = SubLevel(level('/tmp/example-slave'))
 var master = Replicate(db, 'master', "MASTER-2")
+```
 
+## Replicating Sublevels Recursively
 
+```js
+//install Master plugin with the `recursive` option set to `true`.
+var master = Replicate(db, 'master', "MASTER-1", {recursive: true})
+
+// changes made to all sublevels of `db` will replicate!
+db.sublevel('documents').put('foo', {bar: 'baz'}, function() { ... })
 ```
 
 <!--
