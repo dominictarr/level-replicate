@@ -1,4 +1,4 @@
-# level-replicate
+# level-replicate [![build status](https://secure.travis-ci.org/dominictarr/level-replicate.png)](http://travis-ci.org/dominictarr/level-replicate)
 
 master-master replication with levelup.
 
