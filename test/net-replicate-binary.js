@@ -35,12 +35,10 @@ u.generate(d1, {
     return op
   }
 }) (function () {
-  setTimeout(function () {
-    s1.end()
-  }, 500)
+
 })
 
-//d2.put('y'+Math.random(), 'foo', function () {})
-
-u.eventuallyConsistent(d1, d2, 100)
+u.eventuallyConsistent(d1, d2, 100, function () {
+  s1.end();
+})
 
