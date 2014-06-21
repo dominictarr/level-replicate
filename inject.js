@@ -261,22 +261,24 @@ return function (db, masterDb, id, options) {
         if(clock[op.id] > op.ts) return
         return [
           op,
-          {key: op.id+'\x00'+op.ts, value: op.key, type: 'put', prefix: masterDb, keyEncoding: 'utf8', valueEncoding: 'utf8'},
-          {key: op.id, value: op.ts, type: 'put', prefix: clockDb, keyEncoding: 'utf8', valueEncoding: 'utf8'}
+          {
+            key: op.id+'\x00'+op.ts,
+            value: op.key, type: 'put',
+            prefix: masterDb,
+            keyEncoding: 'utf8',
+            valueEncoding: 'utf8'
+          },
+          {
+            key: op.id,
+            value: op.ts,
+            type: 'put',
+            prefix: clockDb,
+            keyEncoding: 'utf8',
+            valueEncoding: 'utf8'
+          }
         ]
       }),
       pull.filter(Boolean),
-  //    .pipe(pull.map(function (batch) {
-  //
-  //      var seen = {}
-  //      //make sure there is only one clock update per batch
-  //      batch = filterReverse(batch, function (op) {
-  //        if(op.prefix !== clockDb)  return true
-  //        else if (!seen[op.key])    return seen[op.key] = true
-  //        return false
-  //      })
-  //      return batch
-  //    }))
       pull.asyncMap(function (batch, cb) {
         db.batch(batch, function (err) {
           cb(err, !!batch)
