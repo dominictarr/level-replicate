@@ -27,7 +27,7 @@
     "rimraf": "^2.2.6",
     "pull-crypto": "~1.0",
     "pull-zip": "1",
-    "tape": "~2.10.2",
+    "tape": "~2.13.3",
     "continuable-para": "~1.0.0",
     "continuable-series": "~1.1.0",
     "shasum": "0.0.2",
