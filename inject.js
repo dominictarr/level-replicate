@@ -161,7 +161,7 @@ return function (db, masterDb, id, options) {
       return pull(
         cat([
           merge(map(nClock, function (value, key) {
-            return {min: key + '\x00' + value, max: key+'\x00\xff', tail: false}
+            return {min: key + '\x00' + value, max: key+'\x00\xff', tail: opts.tail}
           }).map(function (opts) {
             //can remove this once level gets exclusive ranges!
             return pull(pl.read(masterDb, opts), prep())
