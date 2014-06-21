@@ -71,6 +71,8 @@ var master = Replicate(db, 'master', "MASTER-1", {recursive: true})
 db.sublevel('documents').put('foo', {bar: 'baz'}, function() { ... })
 ```
 
+> note: this depends on having level-sublevel@>=5.2.0 with level-hooks@>=4.5.0
+
 <!--
 
 ## did someone say "webscale"?
