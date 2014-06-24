@@ -24,7 +24,7 @@
   "devDependencies": {
     "level-sublevel": "~5.2.0",
     "random-name": "~0.1.0",
-    "rimraf": "^2.2.6",
+    "rimraf": "~2.2.6",
     "pull-crypto": "~1.0",
     "pull-zip": "1",
     "tape": "~2.13.3",

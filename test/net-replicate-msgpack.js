@@ -43,13 +43,9 @@ para(
   u.generate(d1, {create: d('a')}),
   u.generate(d3, {create: d('b')})
 ) (function () {
-    setTimeout(function () {
-      s1.end();
-      //s3.end()
-    }, 1000)
-  })
 
-//u.eventuallyConsistent(d1, d2)
-u.eventuallyConsistent(d1, d3)
-//u.eventuallyConsistent(d2, d3)
+})
 
+u.eventuallyConsistent(d1, d3, 100, function () {
+  s1.end();
+})

@@ -88,7 +88,7 @@ exports.observePull = function obPull (s) {
   return v
 }
 
-exports.eventuallyConsistent = function (d1, d2, delay) {
+exports.eventuallyConsistent = function (d1, d2, delay, cb) {
   delay = delay || 100
   var h1, h2
   var consistent = o.compute([
@@ -113,6 +113,7 @@ exports.eventuallyConsistent = function (d1, d2, delay) {
     console.log(h1() + ' === ' + h2())
     assert.ok(consistent())
     assert.equal(h1(), h2())
+    if (cb) cb()
   }
 }
 
