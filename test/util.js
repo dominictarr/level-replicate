@@ -9,7 +9,7 @@ var u = exports
 exports.all = function all (db) {
   return function (cb) {
     pull(
-      pl.read(db, {min: '\x00', max: '\xff\xff'}),
+      pl.read(db, {min: '\x00', max: '\xff\xff', valueEncoding: 'utf8'}),
       pull.reduce(function (all, op) {
         all[op.key] = op.value
         return all
