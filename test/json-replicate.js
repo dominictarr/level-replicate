@@ -21,7 +21,7 @@ function replicate (m1, m2) {
   }
 }
 
-test('replicate', function (t) {
+test('json replicate', function (t) {
   var db1 = sublevel(level('json_replicate_1', {valueEncoding: 'json'}))
   var db2 = sublevel(level('json_replicate_2', {valueEncoding: 'json'}))
 
@@ -33,8 +33,8 @@ test('replicate', function (t) {
     replicate(m1, m2),
     para(all (db1), all(db2))
   ) (function (err, all) {
-      console.log(err, all)
-      t.notOk(err)
+      t.error(err)
+      console.log(all)
       //assert that both databases are equal!
       t.deepEqual(all[0], all[1])
       t.end()
