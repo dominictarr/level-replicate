@@ -166,7 +166,7 @@ return function (db, masterDb, id, options) {
             //can remove this once level gets exclusive ranges!
             return pull(pl.read(masterDb, opts), prep())
           }), comparator),
-          (opts.tail ? pull(pl.live(masterDb), prep()) : pull.empty())
+          (opts.tail ? pull(pl.live(masterDb, {keyEncoding: 'utf8', valueEncoding: 'utf8'}), prep()) : pull.empty())
         ]),
         pull.filter(function (data) {
           var c = nClock[data.id]
@@ -225,7 +225,7 @@ return function (db, masterDb, id, options) {
 
   masterDb.clock = function (cb) {
     pull(
-      pl.read(clockDb),
+      pl.read(clockDb, {keyEncoding: 'utf8', valueEncoding: 'utf8'}),
       pull.reduce(function (clock, item) {
 
         clock[item.key] = item.value
